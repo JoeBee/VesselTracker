@@ -1,0 +1,127 @@
+.container {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0; // Prevents flex item from overflowing
+}
+
+.imo-input-section {
+    width: 300px;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    position: sticky;
+    top: 1rem;
+    height: fit-content;
+
+    h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .hint {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .imo-textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: monospace;
+        resize: vertical;
+    }
+}
+
+.refresh-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.refresh-button {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: #0056b3;
+    }
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.error-message {
+    color: #dc3545;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #f8d7da;
+    border-radius: 4px;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.vessel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.vessel-card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+    }
+
+    .vessel-details {
+        p {
+            margin: 0.5rem 0;
+        }
+    }
+}
+
+.vessel-info-section {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+
+    h2 {
+        margin-top: 0;
+    }
+
+    pre {
+        background-color: #f5f5f5;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+}
