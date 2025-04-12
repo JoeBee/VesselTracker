@@ -22,6 +22,8 @@ export class AppComponent implements OnInit {
   imoList: string = '';
   imoArray: string[] = [];
   private datePipe = new DatePipe('en-US');
+  sortColumn: string = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(private vesselTrackerService: VesselTrackerService) { }
 
@@ -106,6 +108,13 @@ export class AppComponent implements OnInit {
           console.error('Unexpected API response format:', response);
         }
         console.log('Vessel positions:', this.vesselPositions);
+
+        // Apply initial sort by vessel name if data is loaded
+        if (this.vesselPositions.length > 0) {
+          this.sortColumn = 'name';
+          this.sortDirection = 'asc';
+          this.sortVessels('name');
+        }
       },
       error: (err) => {
         this.error = 'Error loading vessel positions: ' + err.message;
@@ -140,6 +149,80 @@ export class AppComponent implements OnInit {
     }).catch(err => {
       this.error = 'Error adding vessel: ' + err.message;
       console.error('Error:', err);
+    });
+  }
+
+  scrollToTableTop() {
+    const tableBody = document.querySelector('.vessel-table tbody');
+    if (tableBody) {
+      tableBody.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+  scrollToTableBottom() {
+    const tableBody = document.querySelector('.vessel-table tbody');
+    if (tableBody) {
+      tableBody.scrollTo({
+        top: tableBody.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+  sortVessels(column: string) {
+    // If clicking the same column, toggle sort direction
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      // If clicking a new column, set as the sort column with ascending direction
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+
+    // Sort the vessels array based on the selected column and direction
+    this.vesselPositions.sort((a, b) => {
+      let valueA: any;
+      let valueB: any;
+
+      switch (column) {
+        case 'name':
+          valueA = a.aisStatic?.name || '';
+          valueB = b.aisStatic?.name || '';
+          break;
+        case 'position':
+          // Sort by latitude if available
+          valueA = a.aisPosition?.lat || -999;
+          valueB = b.aisPosition?.lat || -999;
+          break;
+        case 'speed':
+          valueA = a.aisPosition?.sog || 0;
+          valueB = b.aisPosition?.sog || 0;
+          break;
+        case 'course':
+          valueA = a.aisPosition?.cog || 0;
+          valueB = b.aisPosition?.cog || 0;
+          break;
+        case 'lastUpdated':
+          valueA = a.aisPosition?.timeReceived ? new Date(a.aisPosition.timeReceived).getTime() : 0;
+          valueB = b.aisPosition?.timeReceived ? new Date(b.aisPosition.timeReceived).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      // Compare the values based on sort direction
+      if (typeof valueA === 'string' && typeof valueB === 'string') {
+        return this.sortDirection === 'asc'
+          ? valueA.localeCompare(valueB)
+          : valueB.localeCompare(valueA);
+      } else {
+        return this.sortDirection === 'asc'
+          ? valueA - valueB
+          : valueB - valueA;
+      }
     });
   }
 }

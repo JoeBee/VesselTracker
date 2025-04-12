@@ -22,7 +22,7 @@
 
     @if (!activeSection) {
     <div class="loading">
-      Select options above to load vessel positions, vessel info, or add a vessel.
+      Select options above to view vessel positions, get vessel info, or add vessels.
     </div>
     }
 
@@ -37,19 +37,52 @@
       <table class="vessel-table">
         <thead>
           <tr>
-            <th>Vessel Name</th>
-            <th>Position</th>
-            <th>Speed</th>
-            <th>Course</th>
-            <th>Last Updated</th>
+            <th (click)="sortVessels('name')" class="sortable">
+              Vessel Name
+              <span *ngIf="sortColumn === 'name'" class="sort-indicator">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
+            <th (click)="sortVessels('position')" class="sortable">
+              Position
+              <span *ngIf="sortColumn === 'position'" class="sort-indicator">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
+            <th (click)="sortVessels('speed')" class="sortable">
+              Speed
+              <span *ngIf="sortColumn === 'speed'" class="sort-indicator">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
+            <th (click)="sortVessels('course')" class="sortable">
+              Course
+              <span *ngIf="sortColumn === 'course'" class="sort-indicator">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
+            <th (click)="sortVessels('lastUpdated')" class="sortable">
+              Last Updated
+              <span *ngIf="sortColumn === 'lastUpdated'" class="sort-indicator">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
           @for (vessel of vesselPositions; track vessel.aisStatic?.imo) {
           <tr>
             <td>{{ vessel.aisStatic?.name || 'Unknown Vessel' }}</td>
-            <td>{{ vessel.aisPosition?.lat?.toFixed(4) || 'N/A' }}°N, {{ vessel.aisPosition?.lon?.toFixed(4) || 'N/A'
-              }}°E</td>
+            <td>
+              @if (vessel.aisPosition?.lat && vessel.aisPosition?.lon) {
+              <a href="https://www.google.com/maps?q={{vessel.aisPosition.lat}},{{vessel.aisPosition.lon}}"
+                target="_blank">
+                {{ vessel.aisPosition.lat.toFixed(4) }}°N, {{ vessel.aisPosition.lon.toFixed(4) }}°E
+              </a>
+              } @else {
+              N/A
+              }
+            </td>
             <td>{{ getFormattedSpeed(vessel.aisPosition?.sog) }}</td>
             <td>{{ vessel.aisPosition?.cog?.toFixed(1) || 'N/A' }}°</td>
             <td>{{ getFormattedDate(vessel.aisPosition?.timeReceived) }}</td>
@@ -57,6 +90,10 @@
           }
         </tbody>
       </table>
+      <div class="table-navigation">
+        <button (click)="scrollToTableTop()" class="nav-arrow up-arrow" title="Scroll to top">↑</button>
+        <button (click)="scrollToTableBottom()" class="nav-arrow down-arrow" title="Scroll to bottom">↓</button>
+      </div>
     </div>
     }
     }
@@ -125,7 +162,7 @@
   <div class="imo-input-section">
     <h3>IMO Numbers</h3>
     <p class="hint">Enter one IMO number per line</p>
-    <textarea [(ngModel)]="imoList" (ngModelChange)="updateImoArray()" placeholder="Enter IMO numbers here..." rows="10"
+    <textarea [(ngModel)]="imoList" (ngModelChange)="updateImoArray()" placeholder="Enter IMO numbers here..."
       class="imo-textarea">
     </textarea>
   </div>

@@ -4,11 +4,15 @@
     padding: 1rem;
     max-width: 1400px;
     margin: 0 auto;
+    min-height: calc(100vh - 2rem);
+    /* Set minimum height to viewport height minus padding */
 }
 
 .main-content {
     flex: 1;
     min-width: 0; // Prevents flex item from overflowing
+    display: flex;
+    flex-direction: column;
 }
 
 .imo-input-section {
@@ -18,7 +22,14 @@
     border-radius: 8px;
     position: sticky;
     top: 1rem;
-    height: fit-content;
+    align-self: flex-start;
+    margin-top: 1rem;
+    /* Align with vessel-table-container */
+    min-height: calc(95vh - 4rem);
+    max-height: calc(98vh - 4rem);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
 
     h3 {
         margin-top: 0;
@@ -33,11 +44,15 @@
 
     .imo-textarea {
         width: 100%;
+        box-sizing: border-box;
+        flex: 1;
+        /* Make textarea take remaining space */
         padding: 0.5rem;
         border: 1px solid #ccc;
         border-radius: 4px;
         font-family: monospace;
-        resize: vertical;
+        resize: none;
+        /* Prevent manual resizing since we're filling available space */
     }
 }
 
@@ -127,8 +142,13 @@ h1 {
     border-radius: 8px;
     padding: 1rem;
     margin-top: 1rem;
-    max-height: 600px;
+    height: calc(100vh - 10rem);
+    /* Adjusted height to match imo-input-section and account for headers */
+    max-height: 100%;
     overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 
     h2 {
         margin-top: 0;
@@ -137,9 +157,48 @@ h1 {
     }
 }
 
+.table-navigation {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 200;
+    pointer-events: auto;
+}
+
+.nav-arrow {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 123, 255, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s, transform 0.1s;
+
+    &:hover {
+        background-color: rgba(0, 123, 255, 1);
+        transform: scale(1.05);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+}
+
 .vessel-table {
     width: 100%;
     border-collapse: collapse;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 
     thead {
         background-color: #f5f5f5;
@@ -150,8 +209,10 @@ h1 {
 
     tbody {
         display: block;
-        max-height: 500px;
-        overflow-y: scroll;
+        max-height: calc(100vh - 16rem);
+        /* Adjusted height to account for header and other elements */
+        overflow-y: auto;
+        scroll-behavior: smooth;
     }
 
     thead,
@@ -172,6 +233,24 @@ h1 {
         background-color: #f5f5f5;
         font-weight: bold;
         color: #333;
+    }
+
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        padding-right: 20px;
+        /* Make space for the sort indicator */
+
+        &:hover {
+            background-color: #e9ecef;
+        }
+    }
+
+    .sort-indicator {
+        position: absolute;
+        right: 6px;
+        font-size: 12px;
     }
 
     tr:hover {
