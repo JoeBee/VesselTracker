@@ -32,26 +32,85 @@
       Loading vessel positions...
     </div>
     } @else {
-    <div class="vessel-grid">
-      @for (vessel of vesselPositions; track vessel.id || vessel.mmsi || $index) {
-      <div class="vessel-card">
-        <h3>{{ vessel.name || vessel.vesselName || 'Unknown Vessel' }}</h3>
-        <div class="vessel-details">
-          <p><strong>Position:</strong> {{ vessel.latitude || 'N/A' }}, {{ vessel.longitude || 'N/A' }}</p>
-          <p><strong>Speed:</strong> {{ vessel.speed || vessel.sog || 'N/A' }} knots</p>
-          <p><strong>Course:</strong> {{ vessel.course || vessel.cog || 'N/A' }}°</p>
-          <p><strong>Last Updated:</strong> {{ getFormattedDate(vessel) }}</p>
-        </div>
-      </div>
-      }
+    <div class="vessel-table-container">
+      <h2>Vessel Positions ({{ vesselPositions.length }} vessels)</h2>
+      <table class="vessel-table">
+        <thead>
+          <tr>
+            <th>Vessel Name</th>
+            <th>Position</th>
+            <th>Speed</th>
+            <th>Course</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (vessel of vesselPositions; track vessel.aisStatic?.imo) {
+          <tr>
+            <td>{{ vessel.aisStatic?.name || 'Unknown Vessel' }}</td>
+            <td>{{ vessel.aisPosition?.lat?.toFixed(4) || 'N/A' }}°N, {{ vessel.aisPosition?.lon?.toFixed(4) || 'N/A'
+              }}°E</td>
+            <td>{{ getFormattedSpeed(vessel.aisPosition?.sog) }}</td>
+            <td>{{ vessel.aisPosition?.cog?.toFixed(1) || 'N/A' }}°</td>
+            <td>{{ getFormattedDate(vessel.aisPosition?.timeReceived) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
     }
     }
 
-    @if (activeSection === 'info' && vesselInfo) {
+    @if (activeSection === 'info' && vesselInfo.length > 0) {
     <div class="vessel-info-section">
       <h2>Vessel Information</h2>
-      <pre>{{ vesselInfo | json }}</pre>
+      @for (vessel of vesselInfo; track vessel.aisStatic.imo) {
+      <div class="vessel-card">
+        <h3>{{ vessel.aisStatic.name }}</h3>
+        <div class="vessel-details">
+          <div class="detail-group">
+            <h4>Basic Information</h4>
+            <p><strong>IMO:</strong> {{ vessel.aisStatic.imo }}</p>
+            <p><strong>MMSI:</strong> {{ vessel.aisStatic.mmsi }}</p>
+            <p><strong>Callsign:</strong> {{ vessel.aisStatic.callsign }}</p>
+            <p><strong>Flag:</strong> {{ vessel.aisStatic.flag }}</p>
+            <p><strong>Type:</strong> {{ vessel.aisStatic.aisShiptype }}</p>
+            <p><strong>Dimensions:</strong> {{ getFormattedDimensions(vessel.aisStatic.length, vessel.aisStatic.width)
+              }}</p>
+            <p><strong>Tonnage:</strong> {{ getFormattedTonnage(vessel.vesselDetails.deadWeight,
+              vessel.vesselDetails.grossTonnage) }}</p>
+            <p><strong>TEU Capacity:</strong> {{ vessel.vesselDetails.teu?.toLocaleString() || 'N/A' }}</p>
+          </div>
+
+          <div class="detail-group">
+            <h4>Current Position</h4>
+            <p><strong>Location:</strong> {{ vessel.aisPosition.lat.toFixed(4) }}°N, {{
+              vessel.aisPosition.lon.toFixed(4) }}°E</p>
+            <p><strong>Speed:</strong> {{ getFormattedSpeed(vessel.aisPosition.sog) }}</p>
+            <p><strong>Course:</strong> {{ vessel.aisPosition.cog.toFixed(1) }}°</p>
+            <p><strong>Heading:</strong> {{ vessel.aisPosition.hdg.toFixed(1) }}°</p>
+            <p><strong>Last Update:</strong> {{ getFormattedDate(vessel.aisPosition.timeReceived) }}</p>
+          </div>
+
+          <div class="detail-group">
+            <h4>Port Information</h4>
+            <p><strong>Current Port:</strong> {{ vessel.geoDetails.currentPort }}</p>
+            <p><strong>Current Berth:</strong> {{ vessel.geoDetails.currentBerth }}</p>
+            <p><strong>Status:</strong> {{ vessel.geoDetails.status }}</p>
+            <p><strong>Port Country:</strong> {{ vessel.geoDetails.portCountry }}</p>
+          </div>
+
+          <div class="detail-group">
+            <h4>Voyage Information</h4>
+            <p><strong>Destination:</strong> {{ vessel.voyageDetails.destination }}</p>
+            <p><strong>ETA:</strong> {{ getFormattedDate(vessel.voyageDetails.calculatedEta) }}</p>
+            <p><strong>Last Port:</strong> {{ vessel.voyageDetails.lastPort }}</p>
+            <p><strong>Last Port Departure:</strong> {{ getFormattedDate(vessel.voyageDetails.lastPortDepartureTime) }}
+            </p>
+          </div>
+        </div>
+      </div>
+      }
     </div>
     }
 

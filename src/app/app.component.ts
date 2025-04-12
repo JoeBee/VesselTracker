@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { VesselTrackerService } from './services/vessel-tracker.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { VesselInfo } from './models/vessel-info.interface';
 
 @Component({
   selector: 'app-root',
@@ -14,7 +15,7 @@ import { FormsModule } from '@angular/forms';
 export class AppComponent implements OnInit {
   title = 'vessel-tracker';
   vesselPositions: any[] = [];
-  vesselInfo: any = null;
+  vesselInfo: VesselInfo[] = [];
   addVesselResult: any = null;
   error: string | null = null;
   activeSection: 'positions' | 'info' | 'add' | null = null;
@@ -43,15 +44,41 @@ export class AppComponent implements OnInit {
       .filter(imo => imo.length > 0);
   }
 
-  getFormattedDate(vessel: any): string {
-    const date = vessel.lastUpdate || vessel.timestamp;
+  getFormattedDate(input: string | { lastUpdate?: string; timestamp?: string } | undefined): string {
+    if (!input) return 'N/A';
+
+    // If input is a string (direct date value)
+    if (typeof input === 'string') {
+      const formattedDate = this.datePipe.transform(input, 'medium');
+      return formattedDate || 'N/A';
+    }
+
+    // If input is an object (vessel position data)
+    const date = input.lastUpdate || input.timestamp;
     if (!date) return 'N/A';
-    return this.datePipe.transform(date, 'medium') || 'N/A';
+
+    const formattedDate = this.datePipe.transform(date, 'medium');
+    return formattedDate || 'N/A';
+  }
+
+  getFormattedSpeed(speed: number | undefined): string {
+    if (speed === undefined) return 'N/A';
+    return `${speed.toFixed(1)} knots`;
+  }
+
+  getFormattedDimensions(length: number | undefined, width: number | undefined): string {
+    if (length === undefined || width === undefined) return 'N/A';
+    return `${length}m × ${width}m`;
+  }
+
+  getFormattedTonnage(deadWeight: number | undefined, grossTonnage: number | undefined): string {
+    if (deadWeight === undefined || grossTonnage === undefined) return 'N/A';
+    return `DW: ${deadWeight.toLocaleString()}t, GT: ${grossTonnage.toLocaleString()}t`;
   }
 
   loadVesselPositions() {
     this.activeSection = 'positions';
-    this.vesselInfo = null;
+    this.vesselInfo = [];
     this.addVesselResult = null;
     this.vesselTrackerService.getLatestVesselPositions().subscribe({
       next: (response: any) => {
@@ -93,7 +120,7 @@ export class AppComponent implements OnInit {
     this.addVesselResult = null;
     this.vesselTrackerService.makeInfobyImoOrMmsiApiCall(this.imoArray).subscribe({
       next: (response: any) => {
-        this.vesselInfo = response;
+        this.vesselInfo = Array.isArray(response) ? response : [response];
         console.log('Vessel info:', this.vesselInfo);
       },
       error: (err) => {
@@ -106,7 +133,7 @@ export class AppComponent implements OnInit {
   addVessel() {
     this.activeSection = 'add';
     this.vesselPositions = [];
-    this.vesselInfo = null;
+    this.vesselInfo = [];
     this.vesselTrackerService.addVesselToUserList(this.imoArray).then(response => {
       this.addVesselResult = response;
       console.log('Vessel added:', this.addVesselResult);

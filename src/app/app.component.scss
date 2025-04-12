@@ -89,21 +89,20 @@ h1 {
 }
 
 .vessel-card {
-    background-color: white;
-    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
     h3 {
-        margin-top: 0;
-        margin-bottom: 1rem;
-    }
-
-    .vessel-details {
-        p {
-            margin: 0.5rem 0;
-        }
+        margin: 0 0 1.5rem 0;
+        color: #2c3e50;
+        font-size: 1.5rem;
+        text-align: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
     }
 }
 
@@ -116,12 +115,95 @@ h1 {
 
     h2 {
         margin-top: 0;
+        margin-bottom: 1.5rem;
+        color: #333;
+        text-align: center;
+    }
+}
+
+.vessel-table-container {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    max-height: 600px;
+    overflow: hidden;
+
+    h2 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+}
+
+.vessel-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead {
+        background-color: #f5f5f5;
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
 
-    pre {
+    tbody {
+        display: block;
+        max-height: 500px;
+        overflow-y: scroll;
+    }
+
+    thead,
+    tbody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    th,
+    td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
         background-color: #f5f5f5;
-        padding: 1rem;
-        border-radius: 4px;
-        overflow-x: auto;
+        font-weight: bold;
+        color: #333;
+    }
+
+    tr:hover {
+        background-color: #f8f9fa;
+    }
+}
+
+.vessel-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.detail-group {
+    h4 {
+        color: #495057;
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    p {
+        margin: 0.5rem 0;
+        color: #495057;
+        font-size: 0.95rem;
+        line-height: 1.4;
+
+        strong {
+            color: #212529;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
     }
 }
