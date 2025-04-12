@@ -4,7 +4,7 @@
 
     <div class="refresh-container">
       <button (click)="loadVesselPositions()" class="refresh-button">
-        Refresh Vessel Positions
+        Get Vessel Positions
       </button>
       <button (click)="getVesselInfo()" class="refresh-button">
         Get Vessel Info
@@ -71,7 +71,7 @@
         </thead>
         <tbody>
           @for (vessel of vesselPositions; track vessel.aisStatic?.imo) {
-          <tr>
+          <tr style="font-family: Verdana; font-size: 9pt;">
             <td>{{ vessel.aisStatic?.name || 'Unknown Vessel' }}</td>
             <td>
               @if (vessel.aisPosition?.lat && vessel.aisPosition?.lon) {

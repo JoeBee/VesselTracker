@@ -78,6 +78,9 @@ export class AppComponent implements OnInit {
     return `DW: ${deadWeight.toLocaleString()}t, GT: ${grossTonnage.toLocaleString()}t`;
   }
 
+  // * API Documentation:
+  // For live vessel positions in return for an IMO or MMSI array: 
+  // https://api.vesseltracker.com/api/v1/api-docs/index.html#/AISData/post_AISData
   loadVesselPositions() {
     this.activeSection = 'positions';
     this.vesselInfo = [];
@@ -123,6 +126,9 @@ export class AppComponent implements OnInit {
     });
   }
 
+  // * API Documentation:
+  // For live vessel positions of a maintained list of vessels: 
+  // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/get_vessels_userlist_latestpositions
   getVesselInfo() {
     this.activeSection = 'info';
     this.vesselPositions = [];
@@ -139,6 +145,8 @@ export class AppComponent implements OnInit {
     });
   }
 
+  // * API Documentation:
+  // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/post_vessels_userlist_add
   addVessel() {
     this.activeSection = 'add';
     this.vesselPositions = [];
