@@ -7,16 +7,30 @@ import { Observable } from 'rxjs';
 })
 export class VesselTrackerService {
     private token = 'ddd42902-9c93-441d-834c-c0fe741130fc';
+
+    // API:
+    // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/
+
+    // Returns AIS Data
+    // https://api.vesseltracker.com/api/v1/api-docs/index.html#/AISData/post_AISData
+    private apiUrlGetAisData = 'https://api.vesseltracker.com/api/v1/AISData';
+
+    // Retrieve the latest positions for the user's vessels
+    // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/get_vessels_userlist_latestpositions
     private apiUrlGetVesselPositions = 'https://api.vesseltracker.com/api/v1/vessels/userlist/latestpositions';
-    private apiUrlPostInfobyImoOrMmsi = 'https://api.vesseltracker.com/api/v1/AISData';
-    private apiUrlPost2 = 'https://api.vesseltracker.com/api/v1/vessels/userlist/add';
+
+    // AAdd vessels by IMO or MMSI list
+    private apiUrlAddVessels = 'https://api.vesseltracker.com/api/v1/vessels/userlist/add';
+
+
+    private apiUrlRemoveVessel = 'https://api.vesseltracker.com/api/v1/vessels/userlist/remove';
 
     constructor(private http: HttpClient) { }
 
     // -----------------------------
     // Retrieve the latest positions for the user's vessels
 
-    getLatestVesselPositions(): Observable<any> {
+    getAisData(): Observable<any> {
         // Include necessary headers
         const headers = new HttpHeaders({
             'Accept': 'application/json',
@@ -29,7 +43,7 @@ export class VesselTrackerService {
     // -----------------------------
     // Returns vessel information by given IMO or MMSI list
 
-    makeInfobyImoOrMmsiApiCall(imoList: string[]): Observable<any> {
+    getVesselPositions(imoList: string[]): Observable<any> {
         const headers = new HttpHeaders({
             'Content-Type': 'application/json',
             'Authorization': this.token
@@ -39,19 +53,21 @@ export class VesselTrackerService {
             "imo": imoList.map(imo => parseInt(imo, 10))
         };
 
-        return this.http.post(this.apiUrlPostInfobyImoOrMmsi, requestBody, { headers });
+        console.log('* SENT Request body:', requestBody);
+        console.log('* SENT headers:', headers);
+        return this.http.post(this.apiUrlGetVesselPositions, requestBody, { headers });
     }
 
     // -----------------------------
     // Add vessels by IMO or MMSI list
 
-    async addVesselToUserList(imoList: string[]) {
+    async addVessels(imoList: string[]) {
         const vesselData = {
             "imo": imoList.map(imo => parseInt(imo, 10))
         };
 
         try {
-            const response = fetch(this.apiUrlPost2, {
+            const response = fetch(this.apiUrlAddVessels, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,6 +93,24 @@ export class VesselTrackerService {
             // Consider re-throwing or returning a specific error value/object.
             throw error;
         }
+    }
+
+    //-------------------------------------------------
+    // Remove vessel by IMO 
+    // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/delete_vessels_userlist_remove_imo
+    removeVessel(imo: string): Observable<any> {
+        const url = `${this.apiUrlRemoveVessel}?imo=${imo}`;
+        const headers = new HttpHeaders({
+            'Accept': 'application/json',
+            'Authorization': this.token,
+            // Cookies are handled by the browser's HttpClient requests automatically if needed
+            // and configured correctly, usually no need to manually set 'Cookie' header here.
+        });
+
+        // HttpClient.delete returns an Observable
+        return this.http.delete(url, { headers });
+        // Note: Error handling and response processing (like checking status 206) 
+        // should now be done where this service method is subscribed to, typically in the component.
     }
 
     //-------------------------------------------------

@@ -4,6 +4,8 @@ import { VesselTrackerService } from './services/vessel-tracker.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VesselInfo } from './models/vessel-info.interface';
+import { forkJoin, of } from 'rxjs'; // Import forkJoin and of
+import { map, catchError } from 'rxjs/operators'; // Import map and catchError
 
 @Component({
   selector: 'app-root',
@@ -14,11 +16,14 @@ import { VesselInfo } from './models/vessel-info.interface';
 })
 export class AppComponent implements OnInit {
   title = 'vessel-tracker';
-  vesselPositions: any[] = [];
-  vesselInfo: VesselInfo[] = [];
+  rtnAisData: any[] = [];
+  vesselPositions: VesselInfo[] = [];
   addVesselResult: any = null;
+  // Add a property to store removal results
+  removalResults: { imo: string, success: boolean, message: string }[] = [];
   error: string | null = null;
-  activeSection: 'positions' | 'info' | 'add' | null = null;
+  // Add 'removalResults' to possible active sections
+  activeSection: 'aisData' | 'vesselPositions' | 'add' | 'removalResults' | null = null;
   imoList: string = '';
   imoArray: string[] = [];
   private datePipe = new DatePipe('en-US');
@@ -35,15 +40,13 @@ export class AppComponent implements OnInit {
 1234568
 1234569`;
     this.updateImoArray();
-    // this.loadVesselPositions();
-    // this.getVesselInfo();
   }
 
   updateImoArray() {
     this.imoArray = this.imoList
       .split('\n')
       .map(imo => imo.trim())
-      .filter(imo => imo.length > 0);
+      .filter(imo => imo.length > 0 && /^\d+$/.test(imo)); // Ensure IMOs are numeric strings
   }
 
   getFormattedDate(input: string | { lastUpdate?: string; timestamp?: string } | undefined): string {
@@ -78,18 +81,23 @@ export class AppComponent implements OnInit {
     return `DW: ${deadWeight.toLocaleString()}t, GT: ${grossTonnage.toLocaleString()}t`;
   }
 
+  // ------------------------------------------------------------
   // * API Documentation:
-  // For live vessel positions in return for an IMO or MMSI array: 
+  // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/
+
+  // AISData - Returns vessel information by given IMO or MMSI list
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/AISData/post_AISData
-  loadVesselPositions() {
-    this.activeSection = 'positions';
-    this.vesselInfo = [];
+  getAisData() {
+    this.activeSection = 'aisData';
+    this.vesselPositions = [];
     this.addVesselResult = null;
-    this.vesselTrackerService.getLatestVesselPositions().subscribe({
+    this.removalResults = []; // Clear removal results
+    this.error = null;
+    this.vesselTrackerService.getAisData().subscribe({
       next: (response: any) => {
         // Check if response is an array, if not, try to find the array in the response
         if (Array.isArray(response)) {
-          this.vesselPositions = response;
+          this.rtnAisData = response;
         } else if (response && typeof response === 'object') {
           // Try to find the array in common response structures
           const possibleArrays = [
@@ -101,19 +109,21 @@ export class AppComponent implements OnInit {
           ].filter(Boolean);
 
           if (possibleArrays.length > 0) {
-            this.vesselPositions = possibleArrays[0];
+            this.rtnAisData = possibleArrays[0];
           } else {
             this.error = 'Invalid response format from API';
             console.error('Unexpected API response format:', response);
+            this.rtnAisData = []; // Ensure it's an empty array on error
           }
         } else {
           this.error = 'Invalid response format from API';
           console.error('Unexpected API response format:', response);
+          this.rtnAisData = []; // Ensure it's an empty array on error
         }
-        console.log('Vessel positions:', this.vesselPositions);
+        console.log('Vessel positions:', this.rtnAisData);
 
         // Apply initial sort by vessel name if data is loaded
-        if (this.vesselPositions.length > 0) {
+        if (this.rtnAisData.length > 0) {
           this.sortColumn = 'name';
           this.sortDirection = 'asc';
           this.sortVessels('name');
@@ -122,43 +132,138 @@ export class AppComponent implements OnInit {
       error: (err) => {
         this.error = 'Error loading vessel positions: ' + err.message;
         console.error('Error:', err);
+        this.rtnAisData = []; // Ensure it's an empty array on error
       }
     });
   }
 
-  // * API Documentation:
-  // For live vessel positions of a maintained list of vessels: 
+  // For live vessel positions of a maintained list of vessels:
+  // --> /vessels/userlist/latestpositions - Retrieve the latest positions for the user's vessels
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/get_vessels_userlist_latestpositions
-  getVesselInfo() {
-    this.activeSection = 'info';
-    this.vesselPositions = [];
+  getVesselPositions() {
+    this.activeSection = 'vesselPositions';
+    this.rtnAisData = [];
     this.addVesselResult = null;
-    this.vesselTrackerService.makeInfobyImoOrMmsiApiCall(this.imoArray).subscribe({
+    this.removalResults = []; // Clear removal results
+    this.error = null;
+    this.vesselTrackerService.getVesselPositions(this.imoArray).subscribe({
       next: (response: any) => {
-        this.vesselInfo = Array.isArray(response) ? response : [response];
-        console.log('Vessel info:', this.vesselInfo);
+        // Ensure response is properly formatted as an array of VesselInfo objects
+        if (response) {
+          // If response is not an array, try to convert it to one
+          const responseArray = Array.isArray(response) ? response : [response];
+
+          // Filter out any null or undefined items and ensure they have the required structure
+          this.vesselPositions = responseArray.filter(item => {
+            // Make sure the item and aisStatic exist before adding to vesselInfo
+            return item && typeof item === 'object';
+          }).map(item => {
+            // Ensure all required properties exist with appropriate defaults
+            return {
+              aisStatic: item.aisStatic || {},
+              aisPosition: item.aisPosition || {},
+              aisVoyage: item.aisVoyage || {},
+              geoDetails: item.geoDetails || {},
+              vesselDetails: item.vesselDetails || {},
+              voyageDetails: item.voyageDetails || {}
+            };
+          });
+
+          console.log('Vessel info:', this.vesselPositions);
+        } else {
+          this.error = 'No vessel information received from API';
+          this.vesselPositions = []; // Ensure it's an empty array
+        }
       },
       error: (err) => {
         this.error = 'Error loading vessel info: ' + err.message;
         console.error('Error:', err);
+        this.vesselPositions = []; // Ensure it's an empty array on error
       }
     });
   }
 
-  // * API Documentation:
+  // /vessels/userlist/add - Add vessels by IMO or MMSI list
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/post_vessels_userlist_add
-  addVessel() {
+  addVessels() {
     this.activeSection = 'add';
+    this.rtnAisData = [];
     this.vesselPositions = [];
-    this.vesselInfo = [];
-    this.vesselTrackerService.addVesselToUserList(this.imoArray).then(response => {
+    this.removalResults = []; // Clear removal results
+    this.error = null;
+    this.vesselTrackerService.addVessels(this.imoArray).then(response => {
       this.addVesselResult = response;
       console.log('Vessel added:', this.addVesselResult);
     }).catch(err => {
       this.error = 'Error adding vessel: ' + err.message;
       console.error('Error:', err);
+      this.addVesselResult = { error: err.message }; // Show error in result
     });
   }
+
+  // /vessels/userlist/remove?imo={imo} - Remove vessel by IMO
+  // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/delete_vessels_userlist_remove_imo
+  removeVessel() {
+    if (this.imoArray.length === 0) {
+      this.error = 'Please enter at least one IMO number in the list to remove.';
+      this.activeSection = null; // Ensure no section is active
+      return;
+    }
+
+    // Prepare for removal operation
+    this.activeSection = 'removalResults'; // Set section to show results
+    this.rtnAisData = [];
+    this.vesselPositions = [];
+    this.addVesselResult = null;
+    this.removalResults = []; // Clear previous results
+    this.error = null; // Clear previous general errors
+
+    const removalObservables = this.imoArray.map(imo =>
+      this.vesselTrackerService.removeVessel(imo).pipe(
+        map(response => ({ // Map success response
+          imo: imo,
+          success: true,
+          message: `Vessel ${imo} removed successfully.`
+        })),
+        catchError(err => of({ // Catch errors and map to error result
+          imo: imo,
+          success: false,
+          message: `Error removing vessel ${imo}: ${err.error?.message || err.message}`
+        }))
+      )
+    );
+
+    forkJoin(removalObservables).subscribe({
+      next: (results) => {
+        this.removalResults = results;
+        console.log('Removal results:', this.removalResults);
+
+        // Filter out successfully removed IMOs from the list
+        const successfulImos = results.filter(r => r.success).map(r => r.imo);
+        if (successfulImos.length > 0) {
+          this.imoList = this.imoList
+            .split('\n')
+            .map(line => line.trim())
+            .filter(imo => !successfulImos.includes(imo))
+            .join('\n');
+          this.updateImoArray(); // Update the array based on the new list
+        }
+      },
+      error: (err) => {
+        // This error block is for errors in forkJoin itself, though unlikely with catchError inside
+        this.error = 'An unexpected error occurred during the removal process.';
+        console.error('Error in forkJoin:', err);
+        // Optionally, populate removalResults with a general error message if needed
+        this.removalResults = this.imoArray.map(imo => ({
+          imo: imo,
+          success: false,
+          message: `Failed to process removal for ${imo} due to a batch error.`
+        }));
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
 
   scrollToTableTop() {
     const tableBody = document.querySelector('.vessel-table tbody');
@@ -191,31 +296,32 @@ export class AppComponent implements OnInit {
     }
 
     // Sort the vessels array based on the selected column and direction
-    this.vesselPositions.sort((a, b) => {
+    this.rtnAisData.sort((a, b) => {
       let valueA: any;
       let valueB: any;
 
+      // Use optional chaining and provide default values for sorting robustness
       switch (column) {
         case 'name':
-          valueA = a.aisStatic?.name || '';
-          valueB = b.aisStatic?.name || '';
+          valueA = a?.aisStatic?.name?.toLowerCase() || '';
+          valueB = b?.aisStatic?.name?.toLowerCase() || '';
           break;
         case 'position':
-          // Sort by latitude if available
-          valueA = a.aisPosition?.lat || -999;
-          valueB = b.aisPosition?.lat || -999;
+          // Sort by latitude if available, handle undefined
+          valueA = a?.aisPosition?.lat ?? -Infinity; // Use ?? for null/undefined
+          valueB = b?.aisPosition?.lat ?? -Infinity;
           break;
         case 'speed':
-          valueA = a.aisPosition?.sog || 0;
-          valueB = b.aisPosition?.sog || 0;
+          valueA = a?.aisPosition?.sog ?? -1; // Default to -1 or similar if needed
+          valueB = b?.aisPosition?.sog ?? -1;
           break;
         case 'course':
-          valueA = a.aisPosition?.cog || 0;
-          valueB = b.aisPosition?.cog || 0;
+          valueA = a?.aisPosition?.cog ?? -1;
+          valueB = b?.aisPosition?.cog ?? -1;
           break;
         case 'lastUpdated':
-          valueA = a.aisPosition?.timeReceived ? new Date(a.aisPosition.timeReceived).getTime() : 0;
-          valueB = b.aisPosition?.timeReceived ? new Date(b.aisPosition.timeReceived).getTime() : 0;
+          valueA = a?.aisPosition?.timeReceived ? new Date(a.aisPosition.timeReceived).getTime() : 0;
+          valueB = b?.aisPosition?.timeReceived ? new Date(b.aisPosition.timeReceived).getTime() : 0;
           break;
         default:
           return 0;
@@ -227,10 +333,16 @@ export class AppComponent implements OnInit {
           ? valueA.localeCompare(valueB)
           : valueB.localeCompare(valueA);
       } else {
+        // Ensure numeric comparison even if types might differ slightly after defaults
+        const numA = Number(valueA);
+        const numB = Number(valueB);
         return this.sortDirection === 'asc'
-          ? valueA - valueB
-          : valueB - valueA;
+          ? numA - numB
+          : numB - numA;
       }
     });
   }
+
+  // ------------------------------------------------------------
+
 }
