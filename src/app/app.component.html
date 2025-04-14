@@ -41,6 +41,12 @@
       <table class="vessel-table">
         <thead>
           <tr>
+            <th (click)="sortVessels('imo')" class="sortable">
+              IMO
+              <span *ngIf="sortColumn === 'imo'" class="sort-indicator">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
             <th (click)="sortVessels('name')" class="sortable">
               Vessel Name
               <span *ngIf="sortColumn === 'name'" class="sort-indicator">
@@ -76,6 +82,7 @@
         <tbody>
           @for (vessel of rtnAisData; track vessel.aisStatic?.imo) {
           <tr style="font-family: Verdana; font-size: 9pt;">
+            <td>{{ vessel.aisStatic?.imo || 'N/A' }}</td>
             <td>{{ vessel.aisStatic?.name || 'Unknown Vessel' }}</td>
             <td>
               @if (vessel.aisPosition?.lat && vessel.aisPosition?.lon) {

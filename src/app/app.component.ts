@@ -42,7 +42,7 @@ export class AppComponent implements OnInit {
     this.updateImoArray();
   }
 
-  updateImoArray() {
+  updateImoArray(): void {
     this.imoArray = this.imoList
       .split('\n')
       .map(imo => imo.trim())
@@ -241,12 +241,12 @@ export class AppComponent implements OnInit {
         // Filter out successfully removed IMOs from the list
         const successfulImos = results.filter(r => r.success).map(r => r.imo);
         if (successfulImos.length > 0) {
-          this.imoList = this.imoList
-            .split('\n')
-            .map(line => line.trim())
-            .filter(imo => !successfulImos.includes(imo))
-            .join('\n');
-          this.updateImoArray(); // Update the array based on the new list
+          // this.imoList = this.imoList
+          //   .split('\n')
+          //   .map(line => line.trim())
+          //   .filter(imo => !successfulImos.includes(imo))
+          //   .join('\n');
+          // this.updateImoArray();  // Update the array based on the new list
         }
       },
       error: (err) => {
