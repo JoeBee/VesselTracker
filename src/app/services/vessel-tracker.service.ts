@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
     providedIn: 'root',
 })
 export class VesselTrackerService {
-    private token = 'ddd42902-9c93-441d-834c-c0fe741130fc';
+    private apiToken: string = '';
 
     // API:
     // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/
@@ -19,13 +19,20 @@ export class VesselTrackerService {
     // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/get_vessels_userlist_latestpositions
     private apiUrlGetVesselPositions = 'https://api.vesseltracker.com/api/v1/vessels/userlist/latestpositions';
 
-    // AAdd vessels by IMO or MMSI list
+    // Add vessels by IMO or MMSI list
+    // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/post_vessels_userlist_add
     private apiUrlAddVessels = 'https://api.vesseltracker.com/api/v1/vessels/userlist/add';
 
-
+    // Deletes a vessel by IMO or MMSI from users's list
+    // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/delete_vessels_userlist_remove
     private apiUrlRemoveVessel = 'https://api.vesseltracker.com/api/v1/vessels/userlist/remove';
 
     constructor(private http: HttpClient) { }
+
+    // Method to update the token
+    setToken(token: string): void {
+        this.apiToken = token;
+    }
 
     // -----------------------------
     // Retrieve the latest positions for the user's vessels
@@ -34,7 +41,7 @@ export class VesselTrackerService {
         // Include necessary headers
         const headers = new HttpHeaders({
             'Accept': 'application/json',
-            'Authorization': this.token,            //  Other headers, if needed, e.g., cookies: '...'
+            'Authorization': this.apiToken,
         });
 
         return this.http.get<any>(this.apiUrlGetVesselPositions, { headers });
@@ -46,7 +53,7 @@ export class VesselTrackerService {
     getVesselPositions(imoList: string[]): Observable<any> {
         const headers = new HttpHeaders({
             'Content-Type': 'application/json',
-            'Authorization': this.token
+            'Authorization': this.apiToken
         });
 
         const requestBody = {
@@ -71,7 +78,7 @@ export class VesselTrackerService {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': this.token, // Replace with a valid auth token
+                    'Authorization': this.apiToken,
                     // Include other necessary headers from the original request as needed,
                     // except for browser-specific or automatically managed headers (e.g., cookie).
                     'Accept': 'application/json',
@@ -102,7 +109,7 @@ export class VesselTrackerService {
         const url = `${this.apiUrlRemoveVessel}?imo=${imo}`;
         const headers = new HttpHeaders({
             'Accept': 'application/json',
-            'Authorization': this.token,
+            'Authorization': this.apiToken,
             // Cookies are handled by the browser's HttpClient requests automatically if needed
             // and configured correctly, usually no need to manually set 'Cookie' header here.
         });

@@ -1,6 +1,10 @@
 <div class="container">
   <div class="main-content">
     <h1>Vessel Tracker</h1>
+    <div class="token-input-container">
+      <label for="apiToken">API Token:</label>
+      <input type="text" id="apiToken" name="apiToken" class="token-input" [(ngModel)]="apiToken">
+    </div>
 
     <div class="refresh-container">
       <!-- https://api.vesseltracker.com/api/v1/api-docs/index.html#/AISData/post_AISData -->

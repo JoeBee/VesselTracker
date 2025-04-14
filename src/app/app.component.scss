@@ -2,7 +2,7 @@
     display: flex;
     gap: 2rem;
     padding: 1rem;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     min-height: calc(100vh - 2rem);
     /* Set minimum height to viewport height minus padding */
@@ -15,8 +15,31 @@
     flex-direction: column;
 }
 
+.token-input-container {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    label {
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .token-input {
+        flex-grow: 1;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+}
+
 .imo-input-section {
-    width: 300px;
+    width: 400px;
     padding: 1rem;
     background-color: #f5f5f5;
     border-radius: 8px;

@@ -16,6 +16,7 @@ import { map, catchError } from 'rxjs/operators'; // Import map and catchError
 })
 export class AppComponent implements OnInit {
   title = 'vessel-tracker';
+  apiToken: string = 'ddd42902-9c93-441d-834c-c0fe741130fc'; // Add apiToken property
   rtnAisData: any[] = [];
   vesselPositions: VesselInfo[] = [];
   addVesselResult: any = null;
@@ -88,6 +89,7 @@ export class AppComponent implements OnInit {
   // AISData - Returns vessel information by given IMO or MMSI list
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/AISData/post_AISData
   getAisData() {
+    this.vesselTrackerService.setToken(this.apiToken); // Set token before API call
     this.activeSection = 'aisData';
     this.vesselPositions = [];
     this.addVesselResult = null;
@@ -141,6 +143,7 @@ export class AppComponent implements OnInit {
   // --> /vessels/userlist/latestpositions - Retrieve the latest positions for the user's vessels
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/get_vessels_userlist_latestpositions
   getVesselPositions() {
+    this.vesselTrackerService.setToken(this.apiToken); // Set token before API call
     this.activeSection = 'vesselPositions';
     this.rtnAisData = [];
     this.addVesselResult = null;
@@ -186,6 +189,7 @@ export class AppComponent implements OnInit {
   // /vessels/userlist/add - Add vessels by IMO or MMSI list
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/post_vessels_userlist_add
   addVessels() {
+    this.vesselTrackerService.setToken(this.apiToken); // Set token before API call
     this.activeSection = 'add';
     this.rtnAisData = [];
     this.vesselPositions = [];
@@ -204,6 +208,8 @@ export class AppComponent implements OnInit {
   // /vessels/userlist/remove?imo={imo} - Remove vessel by IMO
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/delete_vessels_userlist_remove_imo
   removeVessel() {
+    this.vesselTrackerService.setToken(this.apiToken); // Set token before API call
+
     if (this.imoArray.length === 0) {
       this.error = 'Please enter at least one IMO number in the list to remove.';
       this.activeSection = null; // Ensure no section is active
