@@ -95,7 +95,7 @@ export class AppComponent implements OnInit {
     this.addVesselResult = null;
     this.removalResults = []; // Clear removal results
     this.error = null;
-    this.vesselTrackerService.getAisData().subscribe({
+    this.vesselTrackerService.getAisData(this.imoArray).subscribe({
       next: (response: any) => {
         // Check if response is an array, if not, try to find the array in the response
         if (Array.isArray(response)) {
@@ -149,7 +149,7 @@ export class AppComponent implements OnInit {
     this.addVesselResult = null;
     this.removalResults = []; // Clear removal results
     this.error = null;
-    this.vesselTrackerService.getVesselPositions(this.imoArray).subscribe({
+    this.vesselTrackerService.getVesselPositions().subscribe({
       next: (response: any) => {
         // Ensure response is properly formatted as an array of VesselInfo objects
         if (response) {
@@ -207,7 +207,7 @@ export class AppComponent implements OnInit {
 
   // /vessels/userlist/remove?imo={imo} - Remove vessel by IMO
   // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/delete_vessels_userlist_remove_imo
-  removeVessel() {
+  removeVessels() {
     this.vesselTrackerService.setToken(this.apiToken); // Set token before API call
 
     if (this.imoArray.length === 0) {
@@ -225,7 +225,7 @@ export class AppComponent implements OnInit {
     this.error = null; // Clear previous general errors
 
     const removalObservables = this.imoArray.map(imo =>
-      this.vesselTrackerService.removeVessel(imo).pipe(
+      this.vesselTrackerService.removeVessels(this.imoArray).pipe(
         map(response => ({ // Map success response
           imo: imo,
           success: true,

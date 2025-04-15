@@ -37,32 +37,30 @@ export class VesselTrackerService {
     // -----------------------------
     // Retrieve the latest positions for the user's vessels
 
-    getAisData(): Observable<any> {
+    getAisData(imoList: string[]): Observable<any> {
         // Include necessary headers
         const headers = new HttpHeaders({
             'Accept': 'application/json',
             'Authorization': this.apiToken,
         });
 
-        return this.http.get<any>(this.apiUrlGetVesselPositions, { headers });
+        return this.http.post<any>(this.apiUrlGetAisData, { imo: imoList }, { headers });
     }
 
     // -----------------------------
     // Returns vessel information by given IMO or MMSI list
 
-    getVesselPositions(imoList: string[]): Observable<any> {
+    getVesselPositions(): Observable<any> {
         const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Authorization': this.apiToken
+            'Accept': 'application/json',
+            'Authorization': this.apiToken,
         });
 
-        const requestBody = {
-            "imo": imoList.map(imo => parseInt(imo, 10))
-        };
+        // Example timestamp, consider making this dynamic or configurable if needed
+        const updatedSince = '2018-12-18T12:00:00+0200';
+        const url = `${this.apiUrlGetVesselPositions}?updatedSince=${encodeURIComponent(updatedSince)}`;
 
-        console.log('* SENT Request body:', requestBody);
-        console.log('* SENT headers:', headers);
-        return this.http.post(this.apiUrlGetVesselPositions, requestBody, { headers });
+        return this.http.get<any>(url, { headers });
     }
 
     // -----------------------------
@@ -105,21 +103,19 @@ export class VesselTrackerService {
     //-------------------------------------------------
     // Remove vessel by IMO 
     // https://api.vesseltracker.com/api/v1/api-docs/index.html#/Uservessels/delete_vessels_userlist_remove_imo
-    removeVessel(imo: string): Observable<any> {
-        const url = `${this.apiUrlRemoveVessel}?imo=${imo}`;
+    removeVessels(imoList: string[]): Observable<any> {
+        const vesselData = {
+            "imo": imoList.map(imo => parseInt(imo, 10))
+        };
+
         const headers = new HttpHeaders({
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
             'Authorization': this.apiToken,
-            // Cookies are handled by the browser's HttpClient requests automatically if needed
-            // and configured correctly, usually no need to manually set 'Cookie' header here.
         });
 
-        // HttpClient.delete returns an Observable
-        return this.http.delete(url, { headers });
-        // Note: Error handling and response processing (like checking status 206) 
-        // should now be done where this service method is subscribed to, typically in the component.
+        return this.http.post<any>(this.apiUrlRemoveVessel, vesselData, { headers });
     }
-
     //-------------------------------------------------
 }
 

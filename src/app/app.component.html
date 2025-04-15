@@ -17,7 +17,7 @@
       <button (click)="addVessels()" class="refresh-button">
         Add Vessels
       </button>
-      <button (click)="removeVessel()" class="refresh-button">
+      <button (click)="removeVessels()" class="refresh-button">
         Remove Vessels
       </button>
     </div>
@@ -30,7 +30,16 @@
 
     @if (!activeSection) {
     <div class="loading">
-      Select options above to view vessel positions, get vessel info, or add vessels.
+      <ul>
+        <li><b>Get AIS Data</b><br>
+          - Returns vessel information by given IMOs <s>or MMSI list</s></li>
+        <li><b>Get Vessel Postions</b><br>
+          - Returns latest positions for the user's vessels (Does not use IMO List)</li>
+        <li><b>Add Vessels</b><br>
+          - Adds vessels to the user's list by IMO <s>or MMSI list</s></li>
+        <li><b>Remove Vessels</b><br>
+          - Removes vessels from user's list by list of IMOs <s>or list of MMSI numbers</s></li>
+      </ul>
     </div>
     }
 
@@ -42,7 +51,7 @@
     } @else {
     <div class="vessel-table-container">
       <h2>AIS Data - ({{ rtnAisData.length }} vessels)</h2>
-      <table class="vessel-table">
+      <table class="vessel-table table-font-8pt">
         <thead>
           <tr>
             <th (click)="sortVessels('imo')" class="sortable">
@@ -85,7 +94,7 @@
         </thead>
         <tbody>
           @for (vessel of rtnAisData; track vessel.aisStatic?.imo) {
-          <tr style="font-family: Verdana; font-size: 9pt;">
+          <tr>
             <td>{{ vessel.aisStatic?.imo || 'N/A' }}</td>
             <td>{{ vessel.aisStatic?.name || 'Unknown Vessel' }}</td>
             <td>
@@ -114,59 +123,78 @@
     }
 
     @if (activeSection === 'vesselPositions' && vesselPositions.length > 0) {
-    <div class="vessel-info-section">
-      <h2>Vessel Information</h2>
-      @for (vessel of vesselPositions; track vessel?.aisStatic?.imo || $index) {
-      <div class="vessel-card">
-        <h3>{{ vessel?.aisStatic?.name || 'Unknown Vessel' }}</h3>
-        <div class="vessel-details">
-          <div class="detail-group">
-            <h4>Basic Information</h4>
-            <p><strong>IMO:</strong> {{ vessel?.aisStatic?.imo || 'N/A' }}</p>
-            <p><strong>MMSI:</strong> {{ vessel?.aisStatic?.mmsi || 'N/A' }}</p>
-            <p><strong>Callsign:</strong> {{ vessel?.aisStatic?.callsign || 'N/A' }}</p>
-            <p><strong>Flag:</strong> {{ vessel?.aisStatic?.flag || 'N/A' }}</p>
-            <p><strong>Type:</strong> {{ vessel?.aisStatic?.aisShiptype || 'N/A' }}</p>
-            <p><strong>Dimensions:</strong> {{ getFormattedDimensions(vessel?.aisStatic?.length,
-              vessel?.aisStatic?.width) }}</p>
-            <p><strong>Tonnage:</strong> {{ getFormattedTonnage(vessel?.vesselDetails?.deadWeight,
-              vessel?.vesselDetails?.grossTonnage) }}</p>
-            <p><strong>TEU Capacity:</strong> {{
-              (vessel?.vesselDetails?.teu !== undefined && vessel?.vesselDetails?.teu !== null)
-              ? vessel!.vesselDetails!.teu!.toLocaleString()
-              : 'N/A'
-              }}</p>
-          </div>
-
-          <div class="detail-group">
-            <h4>Current Position</h4>
-            <p><strong>Location:</strong> {{ vessel?.aisPosition?.lat?.toFixed(4) || 'N/A' }}°N, {{
-              vessel?.aisPosition?.lon?.toFixed(4) || 'N/A' }}°E</p>
-            <p><strong>Speed:</strong> {{ getFormattedSpeed(vessel?.aisPosition?.sog) }}</p>
-            <p><strong>Course:</strong> {{ vessel?.aisPosition?.cog?.toFixed(1) || 'N/A' }}°</p>
-            <p><strong>Heading:</strong> {{ vessel?.aisPosition?.hdg?.toFixed(1) || 'N/A' }}°</p>
-            <p><strong>Last Update:</strong> {{ getFormattedDate(vessel?.aisPosition?.timeReceived) }}</p>
-          </div>
-
-          <div class="detail-group">
-            <h4>Port Information</h4>
-            <p><strong>Current Port:</strong> {{ vessel?.geoDetails?.currentPort || 'N/A' }}</p>
-            <p><strong>Current Berth:</strong> {{ vessel?.geoDetails?.currentBerth || 'N/A' }}</p>
-            <p><strong>Status:</strong> {{ vessel?.geoDetails?.status || 'N/A' }}</p>
-            <p><strong>Port Country:</strong> {{ vessel?.geoDetails?.portCountry || 'N/A' }}</p>
-          </div>
-
-          <div class="detail-group">
-            <h4>Voyage Information</h4>
-            <p><strong>Destination:</strong> {{ vessel?.voyageDetails?.destination || 'N/A' }}</p>
-            <p><strong>ETA:</strong> {{ getFormattedDate(vessel?.voyageDetails?.calculatedEta) }}</p>
-            <p><strong>Last Port:</strong> {{ vessel?.voyageDetails?.lastPort || 'N/A' }}</p>
-            <p><strong>Last Port Departure:</strong> {{ getFormattedDate(vessel?.voyageDetails?.lastPortDepartureTime)
-              }}</p>
-          </div>
-        </div>
+    <div class="vessel-table-container">
+      <h2>Vessel Information ({{ vesselPositions.length }} vessels)</h2>
+      <table class="vessel-table table-font-8pt">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>IMO</th>
+            <th>MMSI</th>
+            <th>Callsign</th>
+            <th>Flag</th>
+            <th>Type</th>
+            <th>Dimensions</th>
+            <th>Tonnage</th>
+            <th>TEU</th>
+            <th>Location</th>
+            <th>Speed</th>
+            <th>Course</th>
+            <th>Heading</th>
+            <th>Last Update</th>
+            <th>Current Port</th>
+            <th>Current Berth</th>
+            <th>Status</th>
+            <th>Port Country</th>
+            <th>Destination</th>
+            <th>ETA</th>
+            <th>Last Port</th>
+            <th>Last Port Departure</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (vessel of vesselPositions; track vessel?.aisStatic?.imo || $index) {
+          <tr>
+            <td>{{ vessel?.aisStatic?.name || 'Unknown Vessel' }}</td>
+            <td>{{ vessel?.aisStatic?.imo || 'N/A' }}</td>
+            <td>{{ vessel?.aisStatic?.mmsi || 'N/A' }}</td>
+            <td>{{ vessel?.aisStatic?.callsign || 'N/A' }}</td>
+            <td>{{ vessel?.aisStatic?.flag || 'N/A' }}</td>
+            <td>{{ vessel?.aisStatic?.aisShiptype || 'N/A' }}</td>
+            <td>{{ getFormattedDimensions(vessel?.aisStatic?.length, vessel?.aisStatic?.width) }}</td>
+            <td>{{ getFormattedTonnage(vessel?.vesselDetails?.deadWeight, vessel?.vesselDetails?.grossTonnage) }}</td>
+            <td>{{ (vessel?.vesselDetails?.teu !== undefined && vessel?.vesselDetails?.teu !== null) ?
+              vessel!.vesselDetails!.teu!.toLocaleString() : 'N/A' }}</td>
+            <td>
+              @if (vessel?.aisPosition?.lat && vessel?.aisPosition?.lon) {
+              <a href="https://www.google.com/maps?q={{vessel.aisPosition.lat}},{{vessel.aisPosition.lon}}"
+                target="_blank">
+                {{ vessel.aisPosition.lat.toFixed(4) }}°N, {{ vessel.aisPosition.lon.toFixed(4) }}°E
+              </a>
+              } @else {
+              N/A
+              }
+            </td>
+            <td>{{ getFormattedSpeed(vessel?.aisPosition?.sog) }}</td>
+            <td>{{ vessel?.aisPosition?.cog?.toFixed(1) || 'N/A' }}°</td>
+            <td>{{ vessel?.aisPosition?.hdg?.toFixed(1) || 'N/A' }}°</td>
+            <td>{{ getFormattedDate(vessel?.aisPosition?.timeReceived) }}</td>
+            <td>{{ vessel?.geoDetails?.currentPort || 'N/A' }}</td>
+            <td>{{ vessel?.geoDetails?.currentBerth || 'N/A' }}</td>
+            <td>{{ vessel?.geoDetails?.status || 'N/A' }}</td>
+            <td>{{ vessel?.geoDetails?.portCountry || 'N/A' }}</td>
+            <td>{{ vessel?.voyageDetails?.destination || 'N/A' }}</td>
+            <td>{{ getFormattedDate(vessel?.voyageDetails?.calculatedEta) }}</td>
+            <td>{{ vessel?.voyageDetails?.lastPort || 'N/A' }}</td>
+            <td>{{ getFormattedDate(vessel?.voyageDetails?.lastPortDepartureTime) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      <div class="table-navigation">
+        <button (click)="scrollToTableTop()" class="nav-arrow up-arrow" title="Scroll to top">↑</button>
+        <button (click)="scrollToTableBottom()" class="nav-arrow down-arrow" title="Scroll to bottom">↓</button>
       </div>
-      }
     </div>
     }
 
@@ -180,7 +208,7 @@
     @if (activeSection === 'removalResults' && removalResults.length > 0) {
     <div class="vessel-info-section">
       <h2>Removal Results</h2>
-      <table class="vessel-table">
+      <table class="vessel-table table-font-8pt">
         <thead>
           <tr>
             <th>IMO</th>

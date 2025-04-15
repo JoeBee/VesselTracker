@@ -119,6 +119,11 @@ h1 {
     color: #666;
 }
 
+.loading ul {
+    text-align: left;
+    padding-left: 20px; // Add some padding so it doesn't touch the edge
+}
+
 .vessel-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
